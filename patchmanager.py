@@ -76,7 +76,7 @@ def getProperty(propertyName, defaultValue):
     print(f"Value not found for {propertyName}. Returning default {defaultValue}")
     return defaultValue
     
-def setProperty(self, propertyName, newValue):
+def setProperty(propertyName, newValue):
     if (os.path.exists(PatchFile.CONFIGFILE)):
         file = open(PatchFile.CONFIGFILE, 'r')
         lines = file.readlines()
