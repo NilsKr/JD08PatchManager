@@ -19,9 +19,28 @@ in one binary .svd file. So it is hard to merge/sort patch edits made by oneself
 others at various times.
 
 That's where this tool comes in. One can open two .svd files and copy patches from one
-to the other. Edits will be in memory unless Save is clicked explicitly. CTRL-click on
-Save allows for "Save as" functionality. While the file hasn't been saved, one can 
-revert the selected patch or all patches to the state in which the .svd file was loaded.
+to the other.
+
+## Usage
+
+Patches are copied from one list/file to the other by selecting the position where the 
+patch should be copied to (in the target list), selecting the patch to be copied (in the 
+source list), and then clicking the appropriate button to copy the patch left to right
+or vice versa. 
+
+After the patch has been copied, the selection on the target list will automatically move 
+to the next item for your convenience. At the end of the list, it will wrap around to the
+first item.
+
+Double-clicking an item in the source list also copies the patch.
+
+Edits will be in memory only unless Save is clicked explicitly. 
+
+CTRL-click on Save provides "Save as" functionality. 
+
+While the file hasn't been saved, one can revert the selected patch or all patches to 
+the state in which the .svd file was loaded. No other undo functionality is provided, so
+make sure you want to save the file as edited.
 
 One or two .svd file names can be passed on the command line so they get opened at startup.
 
