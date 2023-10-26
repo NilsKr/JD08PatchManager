@@ -342,7 +342,7 @@ class PatchFile(Frame):
         newLabel = str(toIndex).rjust(3, '0') + " " + self.getPatchName(self.data, toIndex)
         origPatch = self.getOriginalPatch(toIndex)
         if origPatch != newPatch:
-            newLabel += " (was " + self.getPatchName(self.orig, toIndex) + ")"
+            newLabel += " (was : " + self.getPatchName(self.orig, toIndex) + ")"
         self.patchList.insert(toIndex, newLabel)
         toIndex += 1
         if toIndex == 256:
@@ -424,4 +424,4 @@ class ButtonBar(Frame):
         btnCopyLeft.place(relx=.5, rely=.5, y=20, height=30, anchor=CENTER)
 
 # It is possible to pass one or two file names from the command line that will be opened
-App('JD-08 Patch Manager v' + VERSION, (550,350), *sys.argv) 
+App('JD-08 Patch Manager v' + VERSION, (650,350), *sys.argv) 

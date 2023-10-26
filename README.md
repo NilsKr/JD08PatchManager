@@ -25,9 +25,34 @@ revert the selected patch or all patches to the state in which the .svd file was
 
 One or two .svd file names can be passed on the command line so they get opened at startup.
 
+## INSTALLATION
+
+Disclaimer: I'm developing on Windows, so Mac/Linux users, forgive me if any OS specific
+issues are encountered.
+
+This application was developed on Python 3, so I'm not sure if if will work on older versions.
+The libraries sys, os, and tkinter should come bundled with the Python install, so a 
+requirements.txt file is currently not present.
+
+### Windows
+If you are running Windows and you don't have Python installed, you may use the binary release
+attached to the GitHub project page.
+
+### Linux
+On Linux (tested on Mint 21.1 Cinnamon) the commands to run the application are:
+
+	sudo apt install git-core python3-tk
+	git clone https://github.com/NilsKr/JD08PatchManager.git
+	cd JD08PatchManager/
+	python3 patchmanager.py
+	
+### MacOS
+To be described. Procedure will be similar to the Linux one.	
+
 ## CONTRIBUTIONS
 
-Drop me a line if you want to contribute code or if you have ideas for useful features. 
+Drop me a line if you want to contribute code or if you want to report a but or you have 
+ideas for useful features. 
 
 ## CONTACT
 
