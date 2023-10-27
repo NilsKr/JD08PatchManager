@@ -321,7 +321,7 @@ class PatchFile(Frame):
 
     def getPatchOffset(self, data, index):
         # TODO: determine if section offset in header is what it is expected to be
-        return 0x168260 + index * 0x800
+        return 0x168260 + 16 + index * 0x800 # 16 is the size of the patch section metadata
     
     def getPatch(self, index):
         offs = self.getPatchOffset(self.data, index)

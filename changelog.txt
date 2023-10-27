@@ -1,2 +1,2 @@
-2023-10-26 Version 1.0 
-	Initial version
+2023-10-26 Version 0.9 
+	Initial version, resulting files to be tested on actual JD-08 device
