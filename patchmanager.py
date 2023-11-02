@@ -20,10 +20,11 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox 
 from tkinter import filedialog
+from tkinter import simpledialog
 import sys
 import os
 
-VERSION = "1.0"
+VERSION = "1.0.1"
 ctrlPressed = False
 
 def keyup(e):
@@ -214,9 +215,13 @@ class PatchFile(Frame):
         self.tryFile(fileName)
     
     def updateButtons(self):
+        renameState = "disabled"
         if self.data == None:
             revertState = btnState = "disabled"
         else:
+            if self.cursel != None:
+                renameState = "normal"
+                
             if self.data == self.orig:
                 btnState = "disabled"
             else:   
@@ -232,6 +237,7 @@ class PatchFile(Frame):
 
         self.btnSave.configure(state=btnState)
         self.btnRevert.configure(state=revertState)
+        self.btnRename.configure(state=renameState)
         self.btnRevertAll.configure(state=btnState)
 
     def onSave(self):
@@ -262,6 +268,14 @@ class PatchFile(Frame):
         if self.data != None:
             ndx = self.cursel[0]
             self.updatePatch(ndx, self.getOriginalPatch(ndx))
+    def onRename(self):
+        if self.cursel[0] != None:
+            newName = simpledialog.askstring(title="Rename",
+                                  prompt="Rename patch to:", 
+                                  initialvalue=self.getPatchName(self.data, self.cursel[0]))
+
+            if newName != None:
+                self.setPatchName(self.data, self.cursel[0], newName)
     def onRevertAll(self):
         if self.data != None:
             self.data = self.orig[:]
@@ -276,12 +290,15 @@ class PatchFile(Frame):
         if not (self.data == None or self.otherFile.data == None):
             self.cursel = self.patchList.curselection()
         self.updateButtons()
-    
+    def onKeyUp(self, e):
+        if e.keycode == 113: # F2
+            self.onRename()
+
     def create_widgets(self):
 
         # create the widgets 
         fileFrame = Frame(self)
-        label = Label(fileFrame, text = "File", anchor="w")
+        label = Label(fileFrame, text = "JD-08 backup file", anchor="w")
         self.fileNameVar = StringVar()
         self.fileName = fileName = Entry(fileFrame, text=self.fileNameVar, state="readonly")
         btnBrowse = Button(fileFrame, text = '...', command = self.onBrowse)
@@ -296,11 +313,15 @@ class PatchFile(Frame):
         patchList.insert(1, "Browse for .svd file to display")
         patchList.bind('<Double-1>', self.onPatchDblclick)
         patchList.bind('<ButtonRelease-1>', self.onPatchClick)
+        patchList.bind('<KeyRelease>', self.onKeyUp)
         scrollBar.config(command = patchList.yview)    
 
-        self.btnSave      = btnSave      = Button(self, text = 'Save', command= self.onSave)
-        self.btnRevert    = btnRevert    = Button(self, text = 'Revert patch', command= self.onRevert)
-        self.btnRevertAll = btnRevertAll = Button(self, text = 'Revert all', command= self.onRevertAll)
+        self.buttonFrame  = buttonFrame  = Frame(self)
+        buttonFrame.columnconfigure((0,1,2,3,4), weight = 1, uniform = 'buttonFrame ')
+        self.btnSave      = btnSave      = Button(buttonFrame, text = 'Save', command= self.onSave)
+        self.btnRevert    = btnRevert    = Button(buttonFrame, text = 'Revert patch', command= self.onRevert)
+        self.btnRename    = btnRename    = Button(buttonFrame, text = 'Rename patch', command= self.onRename)
+        self.btnRevertAll = btnRevertAll = Button(buttonFrame, text = 'Revert all', command= self.onRevertAll)
 
         fileFrame.place(relx=0, x=0, relwidth=1, width = 0, height=40, rely=0, y=10, anchor='nw')
 
@@ -313,9 +334,12 @@ class PatchFile(Frame):
         scrollFrame.place(relx=1, x=-4, width=20, relheight=1, rely=0, y=0, anchor='ne')
         scrollBar.place(relwidth = 1, relheight = 1)
         
-        btnSave.place(relx=0, x=10, rely=1, y=-35, anchor='nw')
-        btnRevert.place(relx=.5, x=-50, rely=1, y=-35, anchor='nw')
-        btnRevertAll.place(relx=1, x=-64, rely=1, y=-35, anchor='nw')
+        buttonFrame.place(relx=0, x=0, relwidth=1, width = 0, height=40, rely=1, y=-40, anchor='nw')
+        btnRevertAll.pack(side = 'right', padx = 3, pady = 1)
+        btnRevert.pack(side = 'right', padx = 3, pady = 1)
+        btnRename.pack(side = 'right', padx = 3, pady = 1)
+        btnSave.pack(side = 'right', padx = 3, pady = 1)
+        
         if self.preloadFileName != None:
             self.tryFile(self.preloadFileName)
 
@@ -367,14 +391,32 @@ class PatchFile(Frame):
 
     def getPatchName(self, data, index):
         offs = self.getPatchOffset(data, index)
-        patchName = data[offs + 32:offs + 48]
+        patchName = data[offs + 16:offs + 32]
         return patchName.decode("UTF-8").strip()
-    
+
+    def setPatchName(self, data, index, newName):
+        if len(newName) == 0:
+            messagebox.showerror("Value required", "The patch name cannot be empty")
+            return
+        if len(newName) >  16:
+            messagebox.showwarning("Value truncated", "The patch name will be truncated to 16 characters")
+            newName = newName[0:16]
+        if len(newName) < 16:
+            newName = newName.ljust(16, ' ')
+            
+        offs = self.getPatchOffset(data, index)
+        arr = bytearray()
+        arr.extend(newName.encode())
+        data[offs + 16:offs + 32] = arr
+        self.updatePatch(index, self.getPatch(index))
+        
     def populateList(self):
         data = self.data
         self.patchList.delete(0,END)
         for i in range(256):
             self.patchList.insert('end', str(i).rjust(3, '0') + " " + self.getPatchName(data, i))
+        self.cursel = None
+        self.updateButtons()
     
     def loadFile(self, fileName):
         n = getFileSize(fileName)

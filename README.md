@@ -32,6 +32,9 @@ After the patch has been copied, the selection on the target list will automatic
 to the next item for your convenience. At the end of the list, it will wrap around to the
 first item.
 
+Patches can be renamed by clicking the button of pressing F2 while the patch list has the 
+focus.
+
 Double-clicking an item in the source list also copies the patch.
 
 Edits will be in memory only unless Save is clicked explicitly. 
