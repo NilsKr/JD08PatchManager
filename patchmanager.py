@@ -342,6 +342,7 @@ class PatchFile(Frame):
         
         if self.preloadFileName != None:
             self.tryFile(self.preloadFileName)
+        self.updateButtons()
 
     def getPatchOffset(self, data, index):
         # TODO: determine if section offset in header is what it is expected to be
