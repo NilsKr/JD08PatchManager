@@ -23,6 +23,7 @@ from tkinter import filedialog
 from tkinter import simpledialog
 import sys
 import os
+import struct
 
 VERSION = "1.0.1"
 ctrlPressed = False
@@ -344,9 +345,19 @@ class PatchFile(Frame):
             self.tryFile(self.preloadFileName)
         self.updateButtons()
 
+    def getPatchSectionOffset(self, data):
+        for i in range(5):
+            section = data[i * 16: (i + 1) * 16]
+            if section[0:4].decode() == "PATa":
+                offs = struct.unpack("l", section[8:12])[0]
+                #print(f"Found! {offs}")
+                return offs
+                
+        print("Section PAT not found!") # TODO: throw exception?
+        return 0x168260
+        
     def getPatchOffset(self, data, index):
-        # TODO: determine if section offset in header is what it is expected to be
-        return 0x168260 + 16 + index * 0x800 # 16 is the size of the patch section metadata
+        return self.getPatchSectionOffset(data) + 16 + index * 0x800 # 16 is the size of the patch section metadata
     
     def getPatch(self, index):
         offs = self.getPatchOffset(self.data, index)
