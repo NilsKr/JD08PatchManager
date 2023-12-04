@@ -373,9 +373,10 @@ class PatchFile(Frame):
             self.data[offs + i] = data[i]
 
     def getPatchNumber(self, ndx):
-        bank = ndx >> 3
-        patch = ndx & 7
-        return f"{bank}:{patch}"
+        bank = chr((ndx >> 6) + 65)
+        subbank = ((ndx >> 3) & 7) + 1
+        patch = (ndx & 7) + 1
+        return f"{bank}{subbank}:{patch}"
         
     def updatePatch(self, toIndex, newPatch):
         self.setPatch(toIndex, newPatch)
