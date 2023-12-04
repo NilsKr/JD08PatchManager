@@ -1,6 +1,9 @@
 Version 1.0.2
 	- Implemented fetch of PAT section offset (instead of hard-coding it)
 	
+Not released yet Version 1.0.2
+	- Changed patch numbering from 0 based index to <bank>:<patch>
+
 2023-11-02 Version 1.0.1
     - Patch names were not displayed correctly. This has been fixed
 	- Added functionality to rename patches

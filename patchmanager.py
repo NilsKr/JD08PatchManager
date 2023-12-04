@@ -25,7 +25,7 @@ import sys
 import os
 import struct
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 ctrlPressed = False
 
 def keyup(e):
@@ -372,10 +372,15 @@ class PatchFile(Frame):
         for i in range(len(data)):
             self.data[offs + i] = data[i]
 
+    def getPatchNumber(self, ndx):
+        bank = ndx >> 3
+        patch = ndx & 7
+        return f"{bank}:{patch}"
+        
     def updatePatch(self, toIndex, newPatch):
         self.setPatch(toIndex, newPatch)
         self.patchList.delete(toIndex)
-        newLabel = str(toIndex).rjust(3, '0') + " " + self.getPatchName(self.data, toIndex)
+        newLabel = self.getPatchNumber(toIndex) + " " + self.getPatchName(self.data, toIndex)
         origPatch = self.getOriginalPatch(toIndex)
         if origPatch != newPatch:
             newLabel += " (was : " + self.getPatchName(self.orig, toIndex) + ")"
@@ -426,7 +431,7 @@ class PatchFile(Frame):
         data = self.data
         self.patchList.delete(0,END)
         for i in range(256):
-            self.patchList.insert('end', str(i).rjust(3, '0') + " " + self.getPatchName(data, i))
+            self.patchList.insert('end', self.getPatchNumber(i) + " " + self.getPatchName(data, i))
         self.cursel = None
         self.updateButtons()
     
