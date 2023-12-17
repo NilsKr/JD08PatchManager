@@ -25,7 +25,7 @@ import sys
 import os
 import struct
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 ctrlPressed = False
 
 def keyup(e):
@@ -349,7 +349,7 @@ class PatchFile(Frame):
         for i in range(5):
             section = data[i * 16: (i + 1) * 16]
             if section[0:4].decode() == "PATa":
-                offs = struct.unpack("l", section[8:12])[0]
+                offs = struct.unpack("i", section[8:12])[0]
                 #print(f"Found! {offs}")
                 return offs
                 
