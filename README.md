@@ -1,11 +1,11 @@
 # JD08PatchManager
-Python GUI program to copy selective patches from one Roland JD-08 .svd file to another.
+Python GUI program to copy selective patches from one Roland JD-08/JX-08 .svd file to another.
 
 ![Screenshot](https://github.com/NilsKr/JD08PatchManager/blob/main/screenshot.png?raw=true)
 
 ## INTRODUCTION
 
-With the JD-08 synthesizer, Roland has decided not to allow saving of separate patches,
+With the JD-08/JX-08 synthesizers, Roland has decided not to allow saving of separate patches,
 nor to implement SysEx dump functionality to achieve the same. 
 This means that it is virtually impossible to share newly created patches with others. 
 
@@ -23,6 +23,11 @@ to the other.
 
 ## Usage
 
+IMPORTANT: while the tool can be used to manage .svd files of both JD-08 and JX-08 models,
+currently it has no knowledge of the internal structure of the patches, nor does it check
+for which synth the file is meant. So in theory it is possible to copy JD-08 patches into
+a JX-08 backup file and vice versa. This is probably a recipe for disaster, so DON'T do it!
+
 Patches are copied from one list/file to the other by selecting the position where the 
 patch should be copied to (in the target list), selecting the patch to be copied (in the 
 source list), and then clicking the appropriate button to copy the patch left to right
@@ -35,7 +40,8 @@ first item.
 Patches can be renamed by clicking the button of pressing F2 while the patch list has the 
 focus.
 
-Double-clicking an item in the source list also copies the patch.
+Double-clicking an item in the source list also copies the patch, just like using the 
+space bar (while focus is on the source list and a slot is selected in the destination list).
 
 Edits will be in memory only unless Save is clicked explicitly. 
 
@@ -49,8 +55,8 @@ One or two .svd file names can be passed on the command line so they get opened 
 
 ## INSTALLATION
 
-Disclaimer: I'm developing on Windows, so Mac/Linux users, forgive me if any OS specific
-issues are encountered.
+Disclaimer: I'm developing on Windows, so Mac/Linux users, forgive me (and report!) if any 
+OS specific issues are encountered.
 
 This application was developed on Python 3, so I'm not sure if if will work on older versions.
 The libraries sys, os, and tkinter should come bundled with the Python install, so a 
@@ -102,8 +108,8 @@ You can reach me at: `nkronert at hotmail dot com`
     https://github.com/NilsKr/JD08PatchManager
 
 As the licensing information mentions, this software comes WITHOUT ANY WARRANTY. 
-In the unlikely case where the Roland JD-08 considers a file edited by this software
-to be corrupt and bricks itself, I cannot be held responsible.
+In the unlikely case where the Roland JD-08 or JX-08 considers a file edited 
+by this software to be corrupt and bricks itself, I cannot be held responsible.
 
 On that positive note, have fun!
 Cheers,

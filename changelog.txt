@@ -1,8 +1,12 @@
-Not released yet Version 1.0.3
+Not released yet Version 1.0.4
+
+	- Navigating with arrow keys does not use selection for copy ticket #2
+	
+(not officially released) Version 1.0.3
 
 	- Error on Debian 11, ticket #1
 	
-(not released) Version 1.0.2 
+(not officially released) Version 1.0.2 
 	- Implemented fetch of PAT section offset (instead of hard-coding it)
 	- Changed patch numbering from 0 based index to <bank>:<patch>
 

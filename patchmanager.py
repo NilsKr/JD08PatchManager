@@ -1,4 +1,6 @@
-#    This program allows merging of JD-08 patches from one .svd file to another.
+#    This program allows merging of JD-08/JX-08 patches from one 
+#    .svd file to another.
+
 #    Copyright (C) 2023 Nils Kronert
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -25,7 +27,7 @@ import sys
 import os
 import struct
 
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 ctrlPressed = False
 
 def keyup(e):
@@ -42,7 +44,7 @@ def getSaveAsName(fileName):
 
     saveAsName = filedialog.asksaveasfile(initialfile = os.path.basename(fileName), 
                     initialdir = os.path.dirname(fileName),
-                    defaultextension=".svd",filetypes = (("JD-08 backup files", "*.svd"),
+                    defaultextension=".svd",filetypes = (("JD-08/JX-08 backup files", "*.svd"),
                                                          ("all files", "*.*")))
     return saveAsName
 
@@ -204,8 +206,8 @@ class PatchFile(Frame):
         
         defaultDir = getProperty("defaultdir", ".")
         fileName = filedialog.askopenfilename(initialdir = defaultDir,
-              title = "Select a JD-08 backup File",
-              filetypes = (("JD-08 backup files", "*.svd"),
+              title = "Select a JD-08/JX-08 backup File",
+              filetypes = (("JD-08/JX-08 backup files", "*.svd"),
                            ("all files", "*.*")))
         if fileName == "":
             return
@@ -292,14 +294,19 @@ class PatchFile(Frame):
             self.cursel = self.patchList.curselection()
         self.updateButtons()
     def onKeyUp(self, e):
+        # print(e.keycode)
         if e.keycode == 113: # F2
             self.onRename()
+        elif e.keycode == 38 or e.keycode == 40: # Cursor up/down
+            self.onPatchClick(e)
+        elif e.keycode == 32: # Space bar
+            self.onPatchDblclick(e)
 
     def create_widgets(self):
 
         # create the widgets 
         fileFrame = Frame(self)
-        label = Label(fileFrame, text = "JD-08 backup file", anchor="w")
+        label = Label(fileFrame, text = "JD-08/JX-08 backup file", anchor="w")
         self.fileNameVar = StringVar()
         self.fileName = fileName = Entry(fileFrame, text=self.fileNameVar, state="readonly")
         btnBrowse = Button(fileFrame, text = '...', command = self.onBrowse)
@@ -484,4 +491,4 @@ class ButtonBar(Frame):
         btnCopyLeft.place(relx=.5, rely=.5, y=20, height=30, anchor=CENTER)
 
 # It is possible to pass one or two file names from the command line that will be opened
-App('JD-08 Patch Manager v' + VERSION, (650,350), *sys.argv) 
+App('JD-08/JX-08 Patch Manager v' + VERSION, (650,350), *sys.argv) 
