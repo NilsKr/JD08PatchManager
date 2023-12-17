@@ -1,6 +1,7 @@
 Not released yet Version 1.0.4
 
 	- Navigating with arrow keys does not use selection for copy ticket #2
+	- Feature request: add short cut keys for ">>" and "<<" actions ticket #3
 	
 (not officially released) Version 1.0.3
 
