@@ -27,7 +27,7 @@ import sys
 import os
 import struct
 
-VERSION = "1.0.4"
+VERSION = "1.0.5"
 ctrlPressed = False
 
 def keyup(e):

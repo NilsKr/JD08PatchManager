@@ -1,4 +1,8 @@
-Not released yet Version 1.0.4
+Not released yet Version 1.0.5
+
+	- Replaced e.keycode by e.keysym equivalents
+
+(not officially released) Version 1.0.4
 
 	- Navigating with arrow keys does not use selection for copy ticket #2
 	- Feature request: add short cut keys for ">>" and "<<" actions ticket #3
