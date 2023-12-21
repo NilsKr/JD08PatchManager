@@ -32,12 +32,12 @@ ctrlPressed = False
 
 def keyup(e):
     global ctrlPressed
-    if e.keycode == 17:
+    if e.keysym == 'Control_L':
         ctrlPressed = False
     
 def keydown(e):
     global ctrlPressed
-    if e.keycode == 17:
+    if e.keysym == 'Control_L':
         ctrlPressed = True
 
 def getSaveAsName(fileName):
@@ -294,12 +294,12 @@ class PatchFile(Frame):
             self.cursel = self.patchList.curselection()
         self.updateButtons()
     def onKeyUp(self, e):
-        # print(e.keycode)
-        if e.keycode == 113: # F2
+        # print(e.keysym)
+        if e.keysym == 'F2': 
             self.onRename()
-        elif e.keycode == 38 or e.keycode == 40: # Cursor up/down
+        elif e.keysym == 'Up' or e.keysym == 'Down': # Cursor up/down
             self.onPatchClick(e)
-        elif e.keycode == 32: # Space bar
+        elif e.keysym == 'space': # Space bar
             self.onPatchDblclick(e)
 
     def create_widgets(self):
