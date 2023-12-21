@@ -294,12 +294,13 @@ class PatchFile(Frame):
             self.cursel = self.patchList.curselection()
         self.updateButtons()
     def onKeyUp(self, e):
-        # print(e.keycode)
-        if e.keycode == 113: # F2
+        #print(e.keycode)
+        #print(e.keysym)
+        if e.keysym == "F2": # F2
             self.onRename()
-        elif e.keycode == 38 or e.keycode == 40: # Cursor up/down
+        elif e.keysym == "Up" or e.keysym == "Down": # Cursor up/down
             self.onPatchClick(e)
-        elif e.keycode == 32: # Space bar
+        elif e.keysym == "space": # Space bar
             self.onPatchDblclick(e)
 
     def create_widgets(self):
@@ -491,4 +492,4 @@ class ButtonBar(Frame):
         btnCopyLeft.place(relx=.5, rely=.5, y=20, height=30, anchor=CENTER)
 
 # It is possible to pass one or two file names from the command line that will be opened
-App('JD-08/JX-08 Patch Manager v' + VERSION, (650,350), *sys.argv) 
+App('JD-08/JX-08 Patch Manager v' + VERSION, (650,350), *sys.argv)
