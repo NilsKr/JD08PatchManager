@@ -53,6 +53,14 @@ make sure you want to save the file as edited.
 
 One or two .svd file names can be passed on the command line so they get opened at startup.
 
+From version 1.1 on, a patch (diff) viewer is available by typing 'd' after selecting a
+patch to view. The window can be kept open - consequent typing of 'd' will re-use the
+window. It is possible to filter the displayed data using the checkboxes at the top.
+
+NOTE: the correctness of displayed information remains to be verified. Also keep in mind
+that at present the software doesn't check if one or both selected .svd files happen to
+be JX-08 files. If so, the displayed patch data is very likely to be inaccurate/misleading.
+
 ## INSTALLATION
 
 Disclaimer: I'm developing on Windows, so Mac/Linux users, forgive me (and report!) if any 
@@ -106,6 +114,14 @@ You can reach me at: `nkronert at hotmail dot com`
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
     https://github.com/NilsKr/JD08PatchManager
+
+    The patch (diff) viewer introduced in version 1.1 uses information 
+    from JD-08.hpp as present in:
+    JDTools - Patch conversion utility for Roland JD-800 / JD-990
+    2022 by Johannes Schultz
+    License: BSD 3-clause
+    https://github.com/sagamusix/JDTools
+    See JD-08.patchdef
 
 As the licensing information mentions, this software comes WITHOUT ANY WARRANTY. 
 In the unlikely case where the Roland JD-08 or JX-08 considers a file edited 

@@ -1,0 +1,541 @@
+// This file is derived by Nils Kronert from JD-08.hpp as present in:
+// JDTools - Patch conversion utility for Roland JD-800 / JD-990
+// 2022 by Johannes Schultz
+// License: BSD 3-clause
+// https://github.com/sagamusix/JDTools
+
+// The reason why this file has been created is to allow the patch structure to be read without using a fully fledged
+// C(++) parser library, which would add dependencies to the code that I'd like to do without.
+
+// Here is the description by Johannes Schultz:
+
+// This file format is officially terrible.
+// It contains two copies of most parameters - the original set of JD-800 parameters with slight modifications
+// (such as using signed chars with -50...+50 range instead of 0...100 - fine by me), exclusively used for display in the UI
+// - and ADDITIONALLY a set of precomputed parameters, which I assume are the ZenCore equivalents of the original parameters.
+// You cannot just create a BIN file containing the display values that can be trivially converted from SysEx format.
+// If you do that, all you hear is silence. No, you have to precompute every single ZenCore parameter, and many of them
+// don't map linearly. Even better, for some envelopes, every time segment uses a different mapping!
+// As a result of this design choice, you could actually create a file with a parameter display that is completely different
+// from the sound that is actually generated until you start to wiggle some sliders, at which point the specific precomputed
+// value for that slider will be updated.
+
+// All bytes that actually differ between patches have been identified. The only remaining unknown variables are static,
+// but not setting them to their expected values will break various features of a patch.
+// Unknown variable names contain an offset relative to the first byte in PatchVST::CommonPrecomputed, and the expected byte value in hex.
+// For structs that are repeated for all four tones, the offset is always for the first tone.
+
+struct ToneVSTPrecomputed
+{
+    struct Layer
+    {
+        uint8_t layerEnabled
+        uint8_t unknown137_00
+        uint8_t unknown138_00
+        uint8_t unknown139_00
+        uint8_t lowKey
+        uint8_t highKey
+        uint8_t unknown142_00
+        uint8_t unknown143_00
+        uint8_t lowVelocity
+        uint8_t highVelocity
+        uint8_t unknown146_00
+        uint8_t unknown147_00
+    }
+
+    struct Common
+    {
+        // Similar to JD-990
+        struct ControlSource
+        {
+            uint8_t  source        // 1 = Lever / CC 1, 96 = Aftertouch
+            uint8_t  destination1  // 1 = Pitch, 2 = Cutoff, 4 = Level, 8 = P-LFO 1, 9 = P-LFO 2
+            uint8_t  depth1
+            uint8_t  destination2
+            uint8_t  depth2
+            uint8_t  destination3
+            uint8_t  depth3
+            uint8_t  destination4
+            uint8_t  depth4
+            uint8_t  unknown253_00
+            uint8_t  unknown254_00
+            uint8_t  unknown255_00
+        }
+
+        uint8_t  tvaLevel
+        uint8_t  unknown185_00
+        uint8_t  pitchCoarse
+        uint8_t  pitchFine
+        uint16le pitchRandom
+        uint8_t unknown190_00
+        uint8_t unknown191_00
+        uint8_t unknown192_00
+        uint8_t unknown193_00
+        uint8_t unknown194_01
+        uint8_t unknown195_00
+        uint8_t unknown196_00
+        uint8_t unknown197_0C
+        uint8_t unknown198_00
+        uint8_t unknown199_00
+        uint8_t unknown200_00
+        uint8_t unknown201_00
+        uint8_t benderSwitch
+        uint8_t unknown203_01
+        uint8_t holdControl
+        uint8_t unknown205_00
+        uint8_t unknown206_01
+        uint8_t unknown207_00
+        uint8_t unknown208_FD
+        uint8_t unknown209_2A
+        uint8_t waveformLSB
+        uint8_t unknown211_00
+        uint8_t unknown212_00
+        uint8_t unknown213_00
+        uint8_t gain
+        uint8_t unknown215_00
+        uint8_t unknown216_01
+        uint8_t unknown217_00
+        uint16le pitchKeyFollow
+
+        uint8_t unknown220_00
+        uint8_t filterType  // +1
+        uint8_t unknown222_00
+        uint8_t unknown223_00
+        
+        uint16le cutoff
+        uint16le filterKeyFollow  // Precomputed, i.e. 150% = 150
+        uint16le velocityCurveTVF
+        uint16le resonance
+        
+        uint8_t unknown232_00
+        uint8_t tvaBiasLevel
+        uint8_t tvaBiasPoint
+        uint8_t tvaBiasDirection  // Lower = 0, Upper = 1, Lower & Upper = 2
+        uint8_t velocityCurveTVA
+        uint8_t tvaVelo
+        uint8_t pitchTimeKF  // -100...100
+        uint8_t tvfTimeKF    // -100...100
+        uint8_t tvaTimeKF    // -100...100
+        uint8_t unknown241_0A
+        uint8_t unknown242_00
+        uint8_t unknown243_00
+        ControlSource cs1  // 244
+        ControlSource cs2  // 256
+        ControlSource cs3  // 268
+        ControlSource cs4  // 280
+        ControlSource cs5  // Probably something completely different given that Roland typically provides 4 modulation sources
+        
+        uint8_t unknown304_00
+        uint8_t unknown305_00
+        uint8_t unknown306_00
+        uint8_t unknown307_00
+    }
+
+    struct PitchEnv
+    {
+        
+        uint8_t unknown680_33
+        uint8_t velo
+        uint8_t timeVelo
+        uint8_t unknown683_00
+        
+        uint16le time1
+        uint16le time2
+        uint16le unknown688_0000
+        uint16le time3
+        uint16le level0
+        uint16le level1
+        uint16le unknown696_0000
+        uint16le unknown698_0000
+        uint16le level2
+        uint16le unknown702_0001
+    }
+
+    struct TVFEnv
+    {
+        
+        uint8_t envDepth
+        uint8_t velocityCurve
+        uint8_t velo
+        uint8_t timeVelo
+        
+        uint16le unknown780_0000
+        uint16le time1
+        uint16le time2
+        uint16le time3
+        uint16le time4
+        uint16le unknown790_0000
+        uint16le level1
+        uint16le level2
+        uint16le sustain
+        uint16le level4
+    }
+
+    struct TVAEnv
+    {
+        
+        uint8_t timeVelo
+        uint8_t unknown873_00
+        
+        uint16le time1
+        uint16le time2
+        uint16le time3
+        uint16le time4
+        uint16le level1
+        uint16le level2
+        uint16le sustain
+    }
+
+    struct LFO
+    {
+        
+        uint8_t waveform
+        uint8_t tempoSync
+        uint8_t rateWithTempoSync
+        uint8_t unknown939_0F
+        uint16le rate
+        
+        uint8_t offset  // -100 / 0 / +100
+        uint8_t delayOnRelease
+        uint16le delay
+        
+        uint8_t unknown946_00
+        uint8_t negativeFade
+        uint16le fade
+        
+        uint8_t keyTrigger
+        uint8_t pitchToLFO
+        uint8_t tvfToLFO
+        uint8_t tvaToLFO
+        std::array<uint8_t, 34> unknown
+    }
+    
+    struct LFOs
+    {
+        ToneVSTPrecomputed::LFO lfo1  // 936, 1040, 1144, 1248
+        ToneVSTPrecomputed::LFO lfo2  // 988, 1092, 1196, 1300
+    }
+
+    struct EQ
+    {
+        
+        uint16le lowGain
+        uint16le midGain
+        uint16le highGain
+        uint16le lowFreq
+        uint16le midFreq
+        uint16le highFreq
+        
+        uint8_t midQ
+        uint8_t eqEnabled
+        uint8_t unknown1366_00
+        uint8_t unknown1367_00
+    }
+
+
+    std::array<uint8_t, 24> unknown112  // 112
+    std::array<Layer, 4> layer          // 136, 148, 160, 172
+    std::array<Common, 4> common        // 184, 308, 432, 556
+    std::array<PitchEnv, 4> pitchEnv    // 680, 704, 728, 752
+    std::array<TVFEnv, 4> tvfEnv        // 776, 800, 824, 848
+    std::array<TVAEnv, 4> tvaEnv        // 872, 888, 904, 920
+    std::array<LFOs, 4> lfo             // 936, 1040, 1144, 1248
+    std::array<EQ, 4> eq                // 1352, 1368, 1384, 1400
+    uint8_t unison                      // 1416
+    std::array<uint8_t, 199> theRest    // 1417
+}
+
+struct ToneVST
+{
+    struct Common
+    {
+        
+        uint8_t layerEnabled
+        uint8_t layerSelected
+        uint8_t velocityCurve
+        uint8_t holdControl
+    }
+
+    struct LFO
+    {
+        
+        uint8_t waveform
+        uint8_t tempoSync  // Extended feature (0 = off, 1 = on)
+        uint8_t rate
+        uint8_t rateWithTempoSync  // Extended feature
+        uint8_t delay
+        uint8_t fade  // +50
+        uint8_t offset
+        uint8_t keyTrigger
+    }
+
+    struct WG
+    {
+        
+        uint8_t waveformLSB     // 0 = no waveform
+        uint8_t unknown1637_00  // Maybe MSB of waveform?
+        uint8_t unknown1638_00
+        uint8_t gain         // Extended feature
+        uint8_t pitchCoarse  // +48
+        uint8_t pitchFine    // +50
+        uint8_t pitchRandom
+        uint8_t keyFollow
+        uint8_t benderSwitch
+        uint8_t aTouchBend
+        uint8_t lfo1Sens       // +50
+        uint8_t lfo2Sens       // +50
+        uint8_t leverSens      // +50
+        uint8_t aTouchModSens  // +50
+    }
+
+    struct PitchEnv
+    {
+        
+        uint8_t velo      // +50
+        uint8_t timeVelo  // +50
+        uint8_t timeKF    // +10
+        uint8_t level0    // +50
+        uint8_t level1    // +50
+        uint8_t level2    // +50
+        uint8_t time1
+        uint8_t time2
+        uint8_t time3
+    }
+
+    struct TVF
+    {
+        
+        uint8_t  filterMode
+        uint8_t  cutoffFreq
+        uint8_t  resonance
+        uint8_t  keyFollow
+        uint8_t  aTouchSens  // +50
+        uint8_t  lfoSelect
+        uint8_t  lfoDepth  // +50
+        uint8_t  envDepth  // +50
+    }
+
+    struct TVFEnv
+    {
+        
+        uint8_t velo      // +50
+        uint8_t timeVelo  // +50
+        uint8_t timeKF    // +10
+        uint8_t level1
+        uint8_t level2
+        uint8_t sustainLevel
+        uint8_t level4
+        uint8_t time1
+        uint8_t time2
+        uint8_t time3
+        uint8_t time4
+    }
+
+    struct TVA
+    {
+        
+        uint8_t biasDirection
+        uint8_t biasPoint
+        uint8_t biasLevel  // +10
+        uint8_t level
+        uint8_t aTouchSens  // +50
+        uint8_t lfoSelect
+        uint8_t lfoDepth  // +50
+    }
+
+    struct TVAEnv
+    {
+        
+        uint8_t  velo      // +50
+        uint8_t  timeVelo  // +50
+        uint8_t  timeKF    // +10
+        uint8_t  level1
+        uint8_t  level2
+        uint8_t  sustainLevel
+        uint8_t  time1
+        uint8_t  time2
+        uint8_t  time3
+        uint8_t  time4
+    }
+
+    Common common
+    LFO lfo1
+    LFO lfo2
+    WG wg
+    PitchEnv pitchEnv
+    TVF tvf
+    TVFEnv tvfEnv
+    TVA tva
+    TVAEnv tvaEnv
+    uint8_t padding
+}
+
+struct PatchVST
+{
+    struct ZenHeader
+    {
+        
+        uint16le modelID1  // 3
+        uint16le modelID2  // 5
+        uint16le rating
+        uint16le unknown_64
+        std::array<uint8_t, 8> empty // Was char[8]
+    }
+
+    struct CommonPrecomputed
+    {
+        
+        uint8_t patchCategory  // Zenology patch category. Can be seen when loading the .bin file into Zenology but not in the JD-800 plugin.
+        uint8_t unknown1_00
+        uint8_t unknown2_00
+        uint8_t unknown3_00
+        uint8_t patchCommonLevel
+        uint8_t unknown5_00
+        uint8_t unknown6_00
+        uint8_t unknown7_00
+        uint8_t unknown8_00
+        uint8_t unknown9_00
+        uint8_t unknown10_00
+        uint8_t unknown11_00
+        uint8_t unknown12_00
+        uint8_t unknown13_00
+        uint8_t soloSW
+        uint8_t soloLegato
+        uint8_t unknown16_0D
+        uint8_t portamentoSW
+        uint8_t portamentoMode
+        uint8_t unknown19_00
+        uint8_t unknown20_00
+        uint8_t unknown21_00
+        uint16le portamentoTime
+        
+        uint8_t benderRangeUp
+        uint8_t benderRangeDown
+        std::array<uint8_t, 22> unknown
+    }
+
+    struct EffectsGroupA
+    {
+        
+        uint8_t unknown48_5D
+        uint8_t groupAenabled
+        uint8_t unknown50_7F
+        uint8_t unknown51_7F
+        std::array<uint8_t, 12> unknown52
+        
+        uint16le groupAsequence
+        uint16le distortionEnabled
+        uint16le distortionType
+        uint16le distortionDrive
+        uint16le distortionLevel
+        uint16le phaserEnabled
+        uint16le phaserManual
+        uint16le phaserRate
+        uint16le phaserDepth
+        uint16le phaserResonance
+        uint16le phaserMix
+        uint16le spectrumEnabled
+        uint16le spectrumBand1
+        uint16le spectrumBand2
+        uint16le spectrumBand3
+        uint16le spectrumBand4
+        uint16le spectrumBand5
+        uint16le spectrumBand6
+        uint16le spectrumBandwidth
+        uint16le enhancerEnabled
+        uint16le enhancerSens
+        uint16le enhancerMix
+        uint16le panningGroupA       // Extended feature, JD-08 only
+        uint16le effectsLevelGroupA  // Extended feature (0...127)
+    }
+
+    struct EffectsGroupB
+    {
+        uint8_t groupBsequence
+        uint8_t delayEnabled
+        uint8_t delayCenterTempoSync  // Extended feature (0 = off, 1 = on)
+        uint8_t delayCenterTap
+        uint8_t delayCenterTapWithSync  // Extended feature
+        uint8_t delayLeftTempoSync      // Extended feature (0 = off, 1 = on)
+        uint8_t delayLeftTap
+        uint8_t delayLeftTapWithSync  // Extended feature
+        uint8_t delayRightTempoSync   // Extended feature (0 = off, 1 = on)
+        uint8_t delayRightTap
+        uint8_t delayRightTapWithSync  // Extended feature
+        uint8_t delayCenterLevel
+        uint8_t delayLeftLevel
+        uint8_t delayRightLevel
+        uint8_t delayFeedback
+        
+        uint8_t chorusEnabled
+        uint8_t chorusRate
+        uint8_t chorusDepth
+        uint8_t chorusDelayTime
+        uint8_t chorusFeedback
+        uint8_t chorusLevel
+        
+        uint8_t reverbEnabled
+        uint8_t reverbType
+        uint8_t reverbPreDelay
+        uint8_t reverbEarlyRefLevel
+        uint8_t reverbHFDamp
+        uint8_t reverbTime
+        uint8_t reverbLevel
+        
+        uint8_t effectsBalanceGroupB
+        uint8_t effectsLevelGroupB  // Extended feature (0...127)
+        
+        uint8_t padding1
+        uint8_t padding2
+    }
+
+    struct Common
+    {
+        
+        uint8_t patchLevel
+        uint8_t keyRangeLowA
+        uint8_t keyRangeHighA
+        uint8_t keyRangeLowB
+        uint8_t keyRangeHighB
+        uint8_t keyRangeLowC
+        uint8_t keyRangeHighC
+        uint8_t keyRangeLowD
+        uint8_t keyRangeHighD
+        uint8_t benderRangeDown
+        uint8_t benderRangeUp
+        uint8_t aTouchBend
+        uint8_t soloSW
+        uint8_t soloLegato
+        uint8_t portamentoSW
+        uint8_t portamentoMode
+        uint8_t portamentoTime
+    }
+
+    struct EQ
+    {
+        // Extended values, frequencies in Hz, gain in centiBel (+24 = 240), Q * 10 (16 = 160)!
+        
+        uint8_t midQ
+        
+        uint16le lowFreq
+        uint16le midFreq
+        uint16le highFreq
+        uint16le lowGain
+        uint16le midGain
+        uint16le highGain
+        
+        uint8_t  eqEnabled
+    }
+
+    ZenHeader zenHeader  // Not present in hardware patches
+    std::array<char, 16> name
+
+    CommonPrecomputed commonPrecomputed  // 0
+    EffectsGroupA effectsGroupA          // 48
+    ToneVSTPrecomputed tonesPrecomputed  // 112
+    std::array<ToneVST, 4> tone          // 1616, 1696, 1776, 1856
+    EffectsGroupB effectsGroupB          // 1936
+    Common common                        // 1968
+    EQ eq                                // 1985
+    uint8_t unison                       // 1999, Extended feature
+}

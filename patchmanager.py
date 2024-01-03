@@ -18,16 +18,22 @@
 #
 #    https://github.com/NilsKr/JD08PatchManager
 
+import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox 
 from tkinter import filedialog
 from tkinter import simpledialog
+from preferences import Preferences
+from patchdiffviewer import PatchDiffViewer
 import sys
 import os
 import struct
 
-VERSION = "1.0.5"
+VERSION = "1.1"
+JD_SIG = "JD PA11"
+JX_SIG   = "JX PA11"
+
 ctrlPressed = False
 
 def keyup(e):
@@ -60,58 +66,34 @@ def getFileSize(fileName):
     except OSError:
         print("OS error occurred.")    
 
-def getProperty(propertyName, defaultValue):
-    if (os.path.exists(PatchFile.CONFIGFILE)):
-        file = open(PatchFile.CONFIGFILE, 'r')
-        lines = file.readlines()
-        file.close()
-        for line in lines:
-            p = line.find("#")
-            if p > -1:
-                line = line[0:p] # Remove comment
-            arr = line.split("=", 2)
-            if len(arr) > 1:
-                prop = arr[0].strip()
-                if prop == propertyName:
-                    value = arr[1].strip()
-                    print(f"Found {prop}={value}")
-                    return value
-     
-    print(f"Value not found for {propertyName}. Returning default {defaultValue}")
-    return defaultValue
+def debug(msg):
+    print(msg)
     
-def setProperty(propertyName, newValue):
-    if (os.path.exists(PatchFile.CONFIGFILE)):
-        file = open(PatchFile.CONFIGFILE, 'r')
-        lines = file.readlines()
-        file.close()
-        
-        changed = False
-        for i in range(len(lines)):
-            line = lines[i]
-            p = line.find("#")
-            comment = ""
-            if p > -1:
-                comment = line[p:]
-                line = line[0:p] # Remove comment
-            arr = line.split("=", 2)
-            if len(arr) > 1:
-                prop = arr[0].strip()
-                if prop == propertyName:
-                    value = arr[1].strip()
-                    print(f"Found {prop}={value}")
-                    lines[i] = propertyName + "=" + newValue + comment
-                    changed = True
-                    break
-    else: # File not found: create new one            
-        lines = []
-        lines.append(propertyName + "=" + newValue)
-        
-    file = open(PatchFile.CONFIGFILE, 'w')
-    file.writelines(lines)
-    file.close()
-    print("Configuration written")
+def all_children(wid) :
+    _list = wid.winfo_children()
+
+    for item in _list :
+        if item.winfo_children() :
+            _list.extend(item.winfo_children())
+
+    return _list
     
+def childrenByType(wid, typeName) :
+    _list = all_children(wid)
+
+    result = []
+    for item in _list:
+        className = type(item).__name__
+        #print(className)
+        if className == typeName:
+            result.append(item)
+            
+    return result
+
+CONFIGFILE = "patchmanager.cfg"
+prefs = None
+buttonBar = None
+
 class App(Tk):
     def onBeforeExit(self):
         if self.leftFile.canClose():
@@ -119,6 +101,10 @@ class App(Tk):
                 self.destroy()
 
     def __init__(self, title, size, *args):
+        global prefs
+        global buttonBar
+        prefs = Preferences(CONFIGFILE)
+        print(f"prefs={prefs}")
         path1 = None
         path2 = None
         if len(args) > 1:
@@ -140,9 +126,10 @@ class App(Tk):
         # widgets 
         self.leftFile = PatchFile(self, path1)
         self.rightFile = PatchFile(self, path2)
+        self.rightFile.isLeftList = False
         self.leftFile.otherFile = self.rightFile
         self.rightFile.otherFile = self.leftFile
-        self.buttons = ButtonBar(self, self.leftFile, self.rightFile)
+        buttonBar = self.buttons = ButtonBar(self, self.leftFile, self.rightFile)
 
         self.columnconfigure((0,2), weight = 10, uniform = 'a')
         self.columnconfigure((1), weight = 2, uniform = 'a')
@@ -158,8 +145,18 @@ class App(Tk):
         self.mainloop()
 
 class PatchFile(Frame):
-    CONFIGFILE = "patchmanager.cfg"
+    isLeftList = True
     
+    def __init__(self, parent, preloadFileName):
+        super().__init__(parent)
+
+        self.data = None
+        self.orig = None
+        self.cursel = None
+        self.preloadFileName = preloadFileName
+
+        self.create_widgets()
+
     def canClose(self):
         if self.data == None or self.data == self.orig:
             return True
@@ -190,21 +187,12 @@ class PatchFile(Frame):
         
         self.updateButtons()
     
-    def __init__(self, parent, preloadFileName):
-        super().__init__(parent)
-
-        self.data = None
-        self.orig = None
-        self.cursel = None
-        self.preloadFileName = preloadFileName
-
-        self.create_widgets()
-
     def onBrowse(self):
+        global prefs
         if not self.canClose():
             return
         
-        defaultDir = getProperty("defaultdir", ".")
+        defaultDir = prefs.getValue("defaultdir", ".")
         fileName = filedialog.askopenfilename(initialdir = defaultDir,
               title = "Select a JD-08/JX-08 backup File",
               filetypes = (("JD-08/JX-08 backup files", "*.svd"),
@@ -213,24 +201,29 @@ class PatchFile(Frame):
             return
         curdir = os.path.dirname(fileName)
         if curdir != defaultDir:
-            setProperty("defaultdir", curdir)
+            prefs.setValue("defaultdir", curdir)
 
         self.tryFile(fileName)
+    
+    def itemSelected(self):
+        if self.cursel != None:
+            return len(self.cursel) > 0
+        return False
     
     def updateButtons(self):
         renameState = "disabled"
         if self.data == None:
             revertState = btnState = "disabled"
         else:
-            if self.cursel != None:
+            if self.itemSelected():
                 renameState = "normal"
                 
             if self.data == self.orig:
                 btnState = "disabled"
             else:   
                 btnState = "normal"
-                
-            if self.cursel == None:
+
+            if not self.itemSelected():
                 revertState = "disabled"
             else:   
                 if self.getPatch(self.cursel[0]) == self.getOriginalPatch(self.cursel[0]):
@@ -294,13 +287,37 @@ class PatchFile(Frame):
             self.cursel = self.patchList.curselection()
         self.updateButtons()
     def onKeyUp(self, e):
-        # print(e.keysym)
+        global buttonBar
         if e.keysym == 'F2': 
             self.onRename()
         elif e.keysym == 'Up' or e.keysym == 'Down': # Cursor up/down
             self.onPatchClick(e)
         elif e.keysym == 'space': # Space bar
             self.onPatchDblclick(e)
+        elif e.keysym == 'd': # Diff
+            if diffWindow == None:
+                buttonBar.openDiffWindow(prefs)
+
+            if self.isLeftList:
+                leftList = self
+                rightList = self.otherFile
+            else:
+                leftList = self.otherFile
+                rightList = self
+
+            if leftList.cursel == None:
+                patchL = None
+            else:
+                patchL = leftList.getPatch(leftList.cursel[0])
+
+            if rightList.cursel == None:
+                patchR = None
+            else:
+                patchR = rightList.getPatch(rightList.cursel[0])
+            
+            if not diffWindow == None:
+                lst = childrenByType(diffWindow, "PatchDiffViewer")[0]
+                lst.setPatches(patchL, patchR)
 
     def create_widgets(self):
 
@@ -414,6 +431,10 @@ class PatchFile(Frame):
         self.cursel = self.patchList.curselection()
         self.updateButtons()
 
+    def getSynthName(self, data):
+        patchName = data[96:96 + 16]
+        return patchName.decode("UTF-8").strip()
+
     def getPatchName(self, data, index):
         offs = self.getPatchOffset(data, index)
         patchName = data[offs + 16:offs + 32]
@@ -457,12 +478,38 @@ class PatchFile(Frame):
         f.close()    
 
         data = bytearray(data) # Convert from bytes() to bytearray() because we want to be able to change the data
+        #print("&" + self.getSynthName(data) + "&")
         if b"N\0SVD5" != data[0:6]:
             messagebox.showerror("Invalid file", f"The file '{fileName}' is invalid (header should be 'N.SVD5' but is {data[0:6]})")
             return None;
         
         return data;
         
+diffWindow = None        
+
+# class DiffWindow(Frame):
+#     def __init__(self, parent):
+#         super().__init__(parent)
+
+#         self.parent = self
+
+#         self.create_widgets()
+
+#     def onBeforeExit(self):
+#         global diffWindow
+#         diffWindow.destroy()
+#         diffWindow = None
+
+#         diffWindow = newWindow = Toplevel(self)
+#         newWindow.protocol("WM_DELETE_WINDOW", self.onBeforeExit)
+
+#         newWindow.title("Patch comparison")
+     
+#         newWindow.geometry("1200x600")
+     
+#         f = tk.Frame(newWindow)
+#         f.config(bg ="pink")
+#         f.pack(expand = True, fill = BOTH)
 
 class ButtonBar(Frame):
     def __init__(self, parent, leftList1, rightList1):
@@ -470,25 +517,56 @@ class ButtonBar(Frame):
 
         self.leftList = leftList1
         self.rightList = rightList1
+        self.parent = self
 
         self.create_widgets()
-        #self.configure(background='green')
 
     def copyLeftToRight(button):
         button.rightList.copyPatchFrom(button.leftList)
 
     def copyRightToLeft(button):
         button.leftList.copyPatchFrom(button.rightList)
-    
+
+    def onBeforeExit(self):
+        global diffWindow
+        if not diffWindow == None:
+            diffWindow.destroy()
+            diffWindow = None
+
+    def openDiffWindow(self, prefs):
+        global diffWindow 
+
+        if not diffWindow == None:
+            self.onBeforeExit()
+            return
+            
+        # Toplevel object which will 
+        # be treated as a new window
+        diffWindow = newWindow = Toplevel(self)
+        newWindow.protocol("WM_DELETE_WINDOW", self.onBeforeExit)
+
+        newWindow.title("Patch comparison")
+     
+        newWindow.geometry("500x600")
+     
+        f = tk.Frame(newWindow)
+        f.config(bg ="pink")
+        f.pack(expand = True, fill = BOTH)
+
+        self.lst = PatchDiffViewer(f, prefs)
+        self.lst.pack(expand = True, fill = BOTH) #.grid(row = 0, column = 0, sticky = 'nswe', padx = 4, pady = 4)
+
     def create_widgets(self):
         
         # create the widgets 
         btnCopyRight = Button(self, text = '>>', command=self.copyLeftToRight)
         btnCopyLeft  = Button(self, text = '<<', command=self.copyRightToLeft)
+        # btnDiff      = Button(self, text = 'Diff', command=self.openDiff)
 
         # place the widgets 
         btnCopyRight.place(relx=.5, rely=.5, y=-20, height=30, anchor=CENTER)
         btnCopyLeft.place(relx=.5, rely=.5, y=20, height=30, anchor=CENTER)
+        # btnDiff.place(relx=.5, rely=.5, y=60, height=30, anchor=CENTER)
 
 # It is possible to pass one or two file names from the command line that will be opened
 App('JD-08/JX-08 Patch Manager v' + VERSION, (650,350), *sys.argv) 
