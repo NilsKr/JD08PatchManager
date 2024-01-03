@@ -3,6 +3,8 @@ Python GUI program to copy selective patches from one Roland JD-08/JX-08 .svd fi
 
 ![Screenshot](https://github.com/NilsKr/JD08PatchManager/blob/main/screenshot.png?raw=true)
 
+![Screenshot](https://github.com/NilsKr/JD08PatchManager/blob/main/screenshot2.png?raw=true)
+
 ## INTRODUCTION
 
 With the JD-08/JX-08 synthesizers, Roland has decided not to allow saving of separate patches,
