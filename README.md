@@ -117,13 +117,13 @@ You can reach me at: `nkronert at hotmail dot com`
 
     https://github.com/NilsKr/JD08PatchManager
 
-    The patch (diff) viewer introduced in version 1.1 uses information 
-    from JD-08.hpp as present in:
-    JDTools - Patch conversion utility for Roland JD-800 / JD-990
-    2022 by Johannes Schultz
-    License: BSD 3-clause
-    https://github.com/sagamusix/JDTools
-    See JD-08.patchdef
+The patch (diff) viewer introduced in version 1.1 uses information 
+from JD-08.hpp as present in:
+JDTools - Patch conversion utility for Roland JD-800 / JD-990
+2022 by Johannes Schultz
+License: BSD 3-clause
+https://github.com/sagamusix/JDTools
+See JD-08.patchdef
 
 As the licensing information mentions, this software comes WITHOUT ANY WARRANTY. 
 In the unlikely case where the Roland JD-08 or JX-08 considers a file edited 
